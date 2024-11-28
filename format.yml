@@ -1,0 +1,13 @@
+trigger:
+- none
+
+pool:
+  vmImage: windows-latest
+
+steps:
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'custom'
+    projects: 'dotnet-hello-world.sln'
+    custom: 'format'
+    arguments: '--verify-no-changes --verbosity diagnostic'

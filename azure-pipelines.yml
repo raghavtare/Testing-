@@ -1,0 +1,53 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+trigger: none
+
+pool:
+  vmImage: 'windows-latest'
+
+steps:
+- checkout: self
+
+# - task: JavaToolInstaller@1
+#   inputs:
+#     versionSpec: '17'
+#     jdkArchitectureOption: 'x86'
+#     jdkSourceOption: 'PreInstalled'
+
+- task: SonarQubePrepare@7
+  inputs:
+    SonarQube: 'Sonar'
+    scannerMode: 'dotnet'
+    projectKey: 'test'
+    projectName: 'test'
+    
+- powershell: |
+    $params = "$env:SONARQUBE_SCANNER_PARAMS" -replace '"sonar.branch.name":"[\w,/,-]*"\,?'
+    Write-Host "##vso[task.setvariable variable=SONARQUBE_SCANNER_PARAMS]$params"
+  displayName: "Remove branches info"
+
+- task: DotNetCoreCLI@2
+  inputs:
+    azureSubscription: 'Service_Conn'
+    command: 'build'
+    projects: '**/*.sln'
+
+# - task: DotNetCoreCLI@2
+#   inputs:
+#     azureSubscription: 'Service_Conn'
+#     command: 'test'
+#     projects: '**/*.sln'
+
+- powershell: |
+    dotnet test ./dotnet-hello-world.sln --logger "trx" --collect "XPlat Code Coverage" -p:RunAnalyzers=false --logger "console;verbosity=detailed"
+  displayName: 'Run tests'
+
+- task: SonarQubeAnalyze@7
+  inputs:
+    jdkversion: 'JAVA_HOME_17_X64'
+
+- task: SonarQubePublish@7
+  inputs:
+    pollingTimeoutSec: '300'
