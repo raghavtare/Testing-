@@ -1,0 +1,6 @@
+#!/bin/sh
+# Exit on errors
+set -e
+
+echo "Installing Husky hooks on checkout..."
+dotnet husky install

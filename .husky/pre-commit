@@ -1,18 +1,32 @@
 #!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
+# Exit on any error
+set -e
 
-echo 'Ready to commit changes!'
 
-echo 'Format'
+echo "Checking if Husky hooks are installed precommit..."
+dotnet husky install
 
-dotnet husky run --name dotnet-format-staged-files
+echo "Running pre-commit hook for multiple solutions..."
 
-echo 'Build'
+# Find all solution files recursively
+solutions=$(find . -name "*.sln")
 
-# dotnet build --no-restore
+# Loop through each solution file and run checks
+for solution in $solutions
+do
+  echo "Processing solution: $solution"
 
-# echo 'Test'
+  # Run CSharpier to format the code
+  dotnet csharpier .
 
-# dotnet test --no-restore
+  # Run dotnet format
+#   dotnet format $solution --verbosity diagnostic
 
-echo 'Completed pre-commit changes'
+#   # Build the solution
+#   dotnet build $solution
+
+#   # Run tests for the solution
+#   dotnet test $solution
+done
+
+echo "Pre-commit hook completed successfully."
